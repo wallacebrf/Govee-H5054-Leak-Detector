@@ -361,7 +361,6 @@ if (file_exists("$leak_detector_config_file")) {
 							//perform data verification of submitted values
 							if (strip_tags(stripslashes(trim(htmlspecialchars($_POST["".$file_name."_clear_leak"])==1)))){
 								$leak_detected=0;
-								$last_leak_email_sent="2000-01-01 00:00:01";
 							}
 							
 							if (strip_tags(stripslashes(trim(htmlspecialchars($_POST["".$file_name."_clear_heart"])==1)))){
