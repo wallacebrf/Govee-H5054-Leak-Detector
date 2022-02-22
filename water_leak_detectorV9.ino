@@ -163,9 +163,9 @@ void loop() {
      Serial.println();
     }
 
-  //reset state machine every 3 seconds. this is needed in the event that random noise detected by the RF receiver has triggered the "blink" ISR and is causing the state machine to go into stalled state
+  //reset state machine every 10 seconds. this is needed in the event that random noise detected by the RF receiver has triggered the "blink" ISR and is causing the state machine to go into stalled state
   currentMillis = millis();
-  if (currentMillis - message_start_Millis2 >= 3000) {
+  if (currentMillis - message_start_Millis2 >= 10000) {
     message_start_Millis2 = currentMillis;
     low_start = 0;
     high_start = 0;
@@ -189,12 +189,20 @@ void loop() {
     battery_status=0;
     parity_received=0;
     parity_calculation=0;
+    button_conter=0;
     memset(tribit_array, 0, sizeof(tribit_array));
     memset(interrupt_array, 0, sizeof(interrupt_array));
     memset(binary_data, 0, sizeof(binary_data));
     memset(leak_ID, 0, sizeof(leak_ID));
     memset(button_ID, 0, sizeof(button_ID));
     memset(b, 0, sizeof(b));
+    //counter_low=0;
+   // counter_high=0;
+   // bit_number=0;
+   // interrupt_counter=0;
+   // mess_end=false;
+   // mess_start=false;
+    //interrupts();
   }
   
 
@@ -208,11 +216,8 @@ void loop() {
             Serial.print(F("start "));
           }
           //reset all of the variables for the new round of data receiving 
-          low_start = 0;
-          high_start = 0;
-          mess_end=false;
-          counter_high=0; 
-          counter_low=0; 
+          counter_low=0;
+          counter_high=0;
           bit_number=0;
           interrupt_counter=0;
           byte1=0;
@@ -221,25 +226,25 @@ void loop() {
           byte4=0;
           byte5=0;
           byte6=0;
-          x_number=0;
-          tribit_ending_bit=0;
-          counter=0;
-          byte_ending_bit=0;
-          unit_number=0;
-          battery_status=0;
-          parity_received=0;
-          parity_calculation=0;
-          memset(tribit_array, 0, sizeof(tribit_array));
-          memset(interrupt_array, 0, sizeof(interrupt_array));
-          memset(binary_data, 0, sizeof(binary_data));
-          memset(leak_ID, 0, sizeof(leak_ID));
-          memset(button_ID, 0, sizeof(button_ID));
-          memset(b, 0, sizeof(b));
         }
     }
 
     //message has started, begin receiving data
     if((mess_start == true)&&(mess_end==false)){
+
+      //check to see if the system has been waiting for over 1 second to receive the end of the message. if it is over 1 second, something went wrong and reset 
+     // currentMillis = millis();
+    //  if (currentMillis - message_start_Millis >= 1000) {
+    //    Serial.println(F("1 second reset"));
+    //    message_start_Millis = currentMillis;
+    //    counter_low=0;
+    //    counter_high=0;
+    //    bit_number=0;
+    //    interrupt_counter=0;
+    //    mess_end=false;
+    //    mess_start=false;
+        //interrupts();
+    //  }
 
       //check if the stop message has been received yet. have we received the required number of bits (96 bits) and did we receive the correct duration end bit
       if((counter_low >= 1350)&&(counter_low <= 1500)&&(interrupt_counter>95)){
@@ -501,8 +506,7 @@ void loop() {
 
           if(button_conter>2){
               button_conter=0;
-              button_ID[0]=0;
-              button_ID[1]=0;
+              memset(button_ID, 0, sizeof(button_ID));
           }
           
           button_ID[button_conter]=unit_number;
@@ -511,8 +515,7 @@ void loop() {
           if(button_conter==2){ //have we received at least 2x button press messages in a row? the sensor sends the same message 13x times in a burst
             if(button_ID[0]==button_ID[1]){ // were both button presses from the same unit?
               button_conter=0;
-              button_ID[0]=0;
-              button_ID[1]=0;
+              memset(button_ID, 0, sizeof(button_ID));
               //we want to perform a delay as a button press causes the sensor to repeat the same message 13x times. we do not want to send data to the server 13 times, so once we do send data, we will perform a delay so we ignore the other data
               //we cannot use a regular delay(10000); function as we have disabled interrupts. the standard delay function requires them to work. 
               //instead we will use the code from here: https://www.arduino.cc/en/Tutorial/BuiltInExamples/BlinkWithoutDelay
@@ -538,8 +541,7 @@ void loop() {
 
           if(leak_counter>2){
               leak_counter=0;
-              leak_ID[0]=0;
-              leak_ID[1]=0;
+              memset(leak_ID, 0, sizeof(leak_ID));
           }
          
           leak_ID[leak_counter]=unit_number;
@@ -548,8 +550,7 @@ void loop() {
           if(leak_counter==2){ //have we received at least 2x leak messages in a row? the sensor sends the same message 13x times in a burst
             if(leak_ID[0]==leak_ID[1]){ // were both messages from the same unit?
               leak_counter=0;
-              leak_ID[0]=0;
-              leak_ID[1]=0;
+              memset(leak_ID, 0, sizeof(leak_ID));
               //we want to perform a delay as water leak detection causes the sensor to repeat the same message for ever until the leak is gone or the senor is muted. we do not want to send data to the server constantly, so once we do send data, we will perform a delay so we ignore the other data
               currentMillis = millis();
              if(previousMillis_leak==0){
@@ -642,24 +643,31 @@ void loop() {
           memset(tribit_array, 0, sizeof(tribit_array));
           memset(interrupt_array, 0, sizeof(interrupt_array));
           memset(binary_data, 0, sizeof(binary_data));
-          memset(leak_ID, 0, sizeof(leak_ID));
-          memset(button_ID, 0, sizeof(button_ID));
           memset(b, 0, sizeof(b));
+     // interrupt_counter=0;
+      //bit_number=0;
       if(debug==1){
         Serial.println(F("Received entire message"));
       }
+      //mess_end=false;
+      //mess_start=false;
+      //interrupts();
   }
 }
 
 void blink() {
-  if((mess_start == true)&&(mess_end==false)){//as long as we are actively looking for a valid signal
+  
     val = digitalRead(interruptPin);   // read the input pin so we can determine if the interrupt was caused by a change from 1 to 0, or from 0 to 1
     if(val == LOW){//current value is low, so we went from a 1 to a 0
       low_start = micros();//save the current time when the interrupt pin when from 1 to 0. 
       counter_high=low_start-high_start; //since we just went from a 1 to 0, we need to calculate how long the previous state of "1" was active for
+      if((mess_start == true)&&(mess_end==false)){//as long as we are actively looking for a valid signal 
         if(interrupt_counter<100){ //we are only looking for 96 bytes. to prevent buffer overflows, make sure we do not save more data to the array than there is available space
           interrupt_array[interrupt_counter]=counter_high; //save the time duration of the high bit into the array
           interrupt_counter++;
+          //if(interrupt_counter==1){
+          //  message_start_Millis2 = millis();
+          //}
         }else{
           interrupt_counter=0; //if we are going over 100 samples, and we only want 96 samples, something is wrong and we need to abort. 
           mess_end=false;
@@ -671,12 +679,17 @@ void blink() {
             Serial.println(F("LR"));
           }
         }
+      }
     }else if(val == HIGH){ //current value is high, so we went from a 0 to a 1
       high_start = micros();//save the current time when the interrupt pin when from 0 to 1.
       counter_low=high_start-low_start;//since we just went from a 0 to 1, we need to calculate how long the previous state of "0" was active for
+      if((mess_start == true)&&(mess_end==false)){//as long as we are actively looking for a valid signal  
         if(interrupt_counter<100){ //we are only looking for 96 bytes. to prevent buffer overflows, make sure we do not save more data to the array than there is available space
           interrupt_array[interrupt_counter]=counter_low;
           interrupt_counter++;
+          //if(interrupt_counter==1){
+          //  message_start_Millis2 = millis();
+          //}
         }else{
           interrupt_counter=0; //if we are going over 100 samples, and we only want 96 samples, something is wrong and we need to abort. 
           mess_end=false;
