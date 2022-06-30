@@ -32,7 +32,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 
 
-//function called to send an alart email
+//function called to send an alert email
 //send_email($emailsubject, $emailmsg, $message_type, $sensor_file_log, $sensor_name, $leak_detector_config_file);
 function send_email($emailsubject, $emailmsg, $message_type, $sensor_file_log, $sensor_name, $leak_detector_config_file){
 	$send_sucessful=1;
