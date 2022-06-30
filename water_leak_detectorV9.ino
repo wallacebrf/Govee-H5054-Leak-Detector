@@ -142,7 +142,7 @@ void loop() {
 
   wdt_reset();
 
-    //every 15 minutes print over serial the available system RAM and the system uptime in minutes
+    //every 15 minutes print over serial the available system RAM and the system up-time in minutes
     currentMillis = millis();
     if (currentMillis - free_ram_Millis >= 900000) { //every 15 mins print the current RAM availability
      free_ram_Millis = currentMillis;
@@ -196,13 +196,6 @@ void loop() {
     memset(leak_ID, 0, sizeof(leak_ID));
     memset(button_ID, 0, sizeof(button_ID));
     memset(b, 0, sizeof(b));
-    //counter_low=0;
-   // counter_high=0;
-   // bit_number=0;
-   // interrupt_counter=0;
-   // mess_end=false;
-   // mess_start=false;
-    //interrupts();
   }
   
 
@@ -231,20 +224,6 @@ void loop() {
 
     //message has started, begin receiving data
     if((mess_start == true)&&(mess_end==false)){
-
-      //check to see if the system has been waiting for over 1 second to receive the end of the message. if it is over 1 second, something went wrong and reset 
-     // currentMillis = millis();
-    //  if (currentMillis - message_start_Millis >= 1000) {
-    //    Serial.println(F("1 second reset"));
-    //    message_start_Millis = currentMillis;
-    //    counter_low=0;
-    //    counter_high=0;
-    //    bit_number=0;
-    //    interrupt_counter=0;
-    //    mess_end=false;
-    //    mess_start=false;
-        //interrupts();
-    //  }
 
       //check if the stop message has been received yet. have we received the required number of bits (96 bits) and did we receive the correct duration end bit
       if((counter_low >= 1350)&&(counter_low <= 1500)&&(interrupt_counter>95)){
@@ -278,7 +257,7 @@ void loop() {
               tribit_array[x]=1;
               bit_number++;
             }
-           //if debug is enabled, print out all of the microsecond time durations 
+           //if debug is enabled, print out all of the microsecond time duration 
            if(debug==1){
               if((x_number==0)){//first of four bits in the current tri-bit being processed
                 Serial.print(interrupt_array[x]);
@@ -573,7 +552,7 @@ void loop() {
           Serial.print(battery_status);
           Serial.println(F(" volts "));
 
-          if(battery_status<=310){ //verify the received battery voltage makes sense. if we recieved a battery voltage outside 1.5 to 3.1 volts, the voltage has to be corrupted and should be ignored
+          if(battery_status<=310){ //verify the received battery voltage makes sense. if we received a battery voltage outside 1.5 to 3.1 volts, the voltage has to be corrupted and should be ignored
             if(battery_status>=150){
               //we want to perform a delay as battery status updates causes the sensor to repeat the same message several times. we do not want to send data to the server constantly, so once we do send data, we will perform a delay so we ignore the other data
               currentMillis = millis();
@@ -644,14 +623,9 @@ void loop() {
           memset(interrupt_array, 0, sizeof(interrupt_array));
           memset(binary_data, 0, sizeof(binary_data));
           memset(b, 0, sizeof(b));
-     // interrupt_counter=0;
-      //bit_number=0;
       if(debug==1){
         Serial.println(F("Received entire message"));
       }
-      //mess_end=false;
-      //mess_start=false;
-      //interrupts();
   }
 }
 
@@ -665,9 +639,6 @@ void blink() {
         if(interrupt_counter<100){ //we are only looking for 96 bytes. to prevent buffer overflows, make sure we do not save more data to the array than there is available space
           interrupt_array[interrupt_counter]=counter_high; //save the time duration of the high bit into the array
           interrupt_counter++;
-          //if(interrupt_counter==1){
-          //  message_start_Millis2 = millis();
-          //}
         }else{
           interrupt_counter=0; //if we are going over 100 samples, and we only want 96 samples, something is wrong and we need to abort. 
           mess_end=false;
@@ -687,9 +658,6 @@ void blink() {
         if(interrupt_counter<100){ //we are only looking for 96 bytes. to prevent buffer overflows, make sure we do not save more data to the array than there is available space
           interrupt_array[interrupt_counter]=counter_low;
           interrupt_counter++;
-          //if(interrupt_counter==1){
-          //  message_start_Millis2 = millis();
-          //}
         }else{
           interrupt_counter=0; //if we are going over 100 samples, and we only want 96 samples, something is wrong and we need to abort. 
           mess_end=false;
